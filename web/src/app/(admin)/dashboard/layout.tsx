@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { DashboardChrome } from "@/components/client/dashboard-chrome";
 import { DashboardSearchProvider } from "@/components/client/dashboard-search-context";
 import { getPublicAppName } from "@/lib/server/config";
+import { isDevDashboardOpen } from "@/lib/dev-dashboard";
 
 function adminInitials(email: string, name?: string | null) {
   const n = name?.trim();
@@ -23,15 +24,25 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
-  if (!session?.user) {
-    redirect("/login?callbackUrl=/dashboard");
-  }
-  if (session.user.role !== "admin") {
-    redirect("/?forbidden=1");
+  const devOpen = isDevDashboardOpen();
+
+  if (!devOpen) {
+    if (!session?.user) {
+      redirect("/login?callbackUrl=/dashboard");
+    }
+    if (session.user.role !== "admin") {
+      redirect("/?forbidden=1");
+    }
   }
 
-  const email = session.user.email ?? "";
-  const initials = adminInitials(email, session.user.name);
+  const email =
+    session?.user?.email ??
+    (devOpen ? "dev@local (open dashboard — remove DEV_OPEN_DASHBOARD for real auth)" : "");
+  const initials = session?.user
+    ? adminInitials(email, session.user.name)
+    : devOpen
+      ? "DV"
+      : adminInitials(email, null);
 
   return (
     <DashboardSearchProvider>

@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import type { UserRole } from "@/lib/server/auth/roles";
+import { isDevDashboardOpen } from "@/lib/dev-dashboard";
 
 const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password"];
 
@@ -46,6 +47,9 @@ export default auth((req) => {
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/");
   if (isAdminPath) {
+    if (isDevDashboardOpen()) {
+      return undefined;
+    }
     if (!isAuthed) {
       const login = new URL("/login", req.url);
       login.searchParams.set("callbackUrl", pathname);

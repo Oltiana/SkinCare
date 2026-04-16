@@ -3,14 +3,19 @@ import { auth } from "@/auth";
 import { CustomersTable, type CustomerRow } from "@/components/client/customers-table";
 import { connectDb } from "@/lib/server/db";
 import { User } from "@/lib/server/models/User";
+import { isDevDashboardOpen } from "@/lib/dev-dashboard";
 
 export default async function DashboardCustomersPage() {
   const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/login?callbackUrl=/dashboard/customers");
-  }
-  if (session.user.role !== "admin") {
-    redirect("/?forbidden=1");
+  const devOpen = isDevDashboardOpen();
+
+  if (!devOpen) {
+    if (!session?.user?.id) {
+      redirect("/login?callbackUrl=/dashboard/customers");
+    }
+    if (session.user.role !== "admin") {
+      redirect("/?forbidden=1");
+    }
   }
 
   await connectDb();
@@ -27,5 +32,5 @@ export default async function DashboardCustomersPage() {
     createdAt: d.createdAt ? new Date(d.createdAt).toISOString() : "",
   }));
 
-  return <CustomersTable users={users} currentUserId={session.user.id} />;
+  return <CustomersTable users={users} currentUserId={session?.user?.id ?? ""} />;
 }

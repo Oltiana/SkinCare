@@ -27,11 +27,8 @@ export default auth((req) => {
     return Response.redirect(new URL("/post-login", req.url));
   }
 
-  /**
-   * Routes that require sign-in (any role): profile, shopping (products/cart), post-login.
-   * Guests cannot browse products or cart — must log in first.
-   */
-  const userOnlyPrefixes = ["/profile", "/post-login", "/products", "/cart"];
+  /** Routes that require sign-in (any role). */
+  const userOnlyPrefixes = ["/profile", "/post-login"];
   const needsUser = userOnlyPrefixes.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );

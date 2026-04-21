@@ -98,8 +98,13 @@ function CurrencyIcon() {
 }
 
 export default async function DashboardHomePage() {
-  await connectDb();
-  const totalUsers = await User.countDocuments();
+  let totalUsers = 0;
+  try {
+    await connectDb();
+    totalUsers = await User.countDocuments();
+  } catch (error) {
+    console.error("Dashboard could not load user stats:", error);
+  }
 
   return (
     <div className="min-h-full bg-white px-6 py-8 sm:px-10 sm:py-10">

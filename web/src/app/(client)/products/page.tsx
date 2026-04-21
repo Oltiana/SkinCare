@@ -20,7 +20,12 @@ export default function ProductsPage() {
   useEffect(() => {
     const timeout = setTimeout(() => {
       fetch(`/api/products?search=${search}`)
-        .then((res) => res.json())
+        .then(async (res) => {
+          if (!res.ok) {
+            return [];
+          }
+          return res.json();
+        })
         .then((data) => {
           // ✅ FIX: konverto _id në string
           const fixed = data.map((p: any) => ({
@@ -28,7 +33,8 @@ export default function ProductsPage() {
             _id: p._id?.$oid || p._id,
           }));
           setProducts(fixed);
-        });
+        })
+        .catch(() => setProducts([]));
     }, 300);
 
     return () => clearTimeout(timeout);

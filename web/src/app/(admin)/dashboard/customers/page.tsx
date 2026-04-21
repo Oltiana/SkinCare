@@ -18,11 +18,22 @@ export default async function DashboardCustomersPage() {
     }
   }
 
-  await connectDb();
-  const docs = await User.find()
-    .sort({ createdAt: -1 })
-    .select({ email: 1, name: 1, role: 1, createdAt: 1 })
-    .lean();
+  let docs: Array<{
+    _id: unknown;
+    email: string;
+    name?: string;
+    role?: string;
+    createdAt?: Date | string;
+  }> = [];
+  try {
+    await connectDb();
+    docs = await User.find()
+      .sort({ createdAt: -1 })
+      .select({ email: 1, name: 1, role: 1, createdAt: 1 })
+      .lean();
+  } catch (error) {
+    console.error("Dashboard customers could not load users:", error);
+  }
 
   const users: CustomerRow[] = docs.map((d) => ({
     id: String(d._id),

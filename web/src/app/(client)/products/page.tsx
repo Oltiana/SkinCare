@@ -9,7 +9,6 @@ type Product = {
   name: string;
   price: number;
   image: string;
-  description: string;
 };
 
 export default function ProductsPage() {
@@ -82,9 +81,6 @@ export default function ProductsPage() {
               {product.name}
             </h2>
 
-            <h3 className="text-base font-medium text-stone-900 mb-3 tracking-[0.04em]">
-              {product.description}
-            </h3>
 
             <p className="text-stone-900 font-medium text-sm mb-5 tracking-wide">
               €{product.price}

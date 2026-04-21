@@ -59,6 +59,25 @@ function PowerIcon({ className }: { className?: string }) {
   );
 }
 
+function ReviewIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8.25 12h7.5m-7.5 3h4.5M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8L3 21l1.2-3.2A7.964 7.964 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+      />
+    </svg>
+  );
+}
+
 type DashboardChromeProps = {
   appName: string;
   userEmail: string;
@@ -99,6 +118,11 @@ export function DashboardChrome({ appName, userEmail, userInitials, children }: 
             <PeopleIcon className="h-5 w-5 shrink-0 text-stone-500" />
             Customers
           </Link>
+
+          <Link href="/dashboard/reviews" className={navLinkClass(pathname === "/dashboard/reviews")} > 
+          <ReviewIcon className="h-5 w-5 shrink-0 text-stone-500" />
+           Reviews
+            </Link>
         </nav>
 
         <div className="px-5 pb-8 pt-4">

@@ -14,8 +14,16 @@ export default function CartPage() {
     try {
       setLoading(true);
       const res = await fetch("/api/cart");
-      const data = await res.json();
-      setCart(data || { items: [] });
+
+      if (!res.ok) {
+        setCart({ items: [] });
+        return;
+      }
+
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : { items: [] };
+
+      setCart(data);
     } catch (err) {
       console.error(err);
       setCart({ items: [] });

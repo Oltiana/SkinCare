@@ -7,15 +7,21 @@ export async function POST(req: Request) {
 
   const { productId } = await req.json();
 
-  const cart = await Cart.findOne({ userId: "1" });
+  let cart = await Cart.findOne({ userId: "1" });
+
+  if (!cart) {
+    return NextResponse.json({ items: [] });
+  }
 
   const item = cart.items.find((i: any) => i.productId === productId);
 
   if (item) {
     item.quantity -= 1;
-  }
 
-  cart.items = cart.items.filter((i: any) => i.quantity > 0);
+    if (item.quantity <= 0) {
+      cart.items = cart.items.filter((i: any) => i.productId !== productId);
+    }
+  }
 
   await cart.save();
 

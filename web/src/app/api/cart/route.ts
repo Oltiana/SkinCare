@@ -6,9 +6,16 @@ import { NextResponse } from "next/server";
 export async function GET() {
   await connectDB();
 
-  const cart = await Cart.findOne({ userId: "1" });
+  let cart = await Cart.findOne({ userId: "1" });
 
-  return NextResponse.json(cart || { items: [] });
+  if (!cart) {
+    cart = await Cart.create({
+      userId: "1",
+      items: [],
+    });
+  }
+
+  return NextResponse.json(cart);
 }
 
 // ADD / UPDATE CART
@@ -52,7 +59,11 @@ export async function DELETE(req: Request) {
 
   const { productId } = await req.json();
 
-  const cart = await Cart.findOne({ userId: "1" });
+  let cart = await Cart.findOne({ userId: "1" });
+
+  if (!cart) {
+    return NextResponse.json({ items: [] });
+  }
 
   cart.items = cart.items.filter((item: any) => item.productId !== productId);
 

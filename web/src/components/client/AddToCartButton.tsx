@@ -5,18 +5,25 @@ import { useState } from "react";
 export default function AddToCartButton({ product }: any) {
   const [added, setAdded] = useState(false);
 
-  const addToCart = () => {
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  const addToCart = async () => {
+    try {
+      await fetch("/api/cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productId: product._id,
+          name: product.name,
+          price: product.price,
+        }),
+      });
 
-    const exists = cart.find((p: any) => p._id === product._id);
-
-    if (!exists) {
-      cart.push(product);
-      localStorage.setItem("cart", JSON.stringify(cart));
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1000);
+    } catch (error) {
+      console.error("Error adding to cart:", error);
     }
-
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1000);
   };
 
   return (

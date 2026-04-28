@@ -2,46 +2,110 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 
 export default function CartPage() {
-  const [cart, setCart] = useState<any>(null);
+  const [cart, setCart] = useState<any>({ items: [] });
+  const [loading, setLoading] = useState(true);
 
   // FETCH CART
   const fetchCart = async () => {
-    const res = await fetch("/api/cart");
-    const data = await res.json();
-    setCart(data);
+    try {
+      setLoading(true);
+      const res = await fetch("/api/cart");
+      const data = await res.json();
+      setCart(data || { items: [] });
+    } catch (err) {
+      console.error(err);
+      setCart({ items: [] });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchCart();
   }, []);
 
-  // INCREASE
+  // INCREASE (SMOOTH)
   const increase = async (item: any) => {
+    // update UI instantly
+    setCart((prev: any) => ({
+      ...prev,
+      items: prev.items.map((i: any) =>
+        i.productId === item.productId ? { ...i, quantity: i.quantity + 1 } : i,
+      ),
+    }));
+
+    // call API
     await fetch("/api/cart", {
       method: "POST",
-      body: JSON.stringify(item),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+      }),
     });
-    fetchCart();
   };
 
-  // DECREASE
+  // DECREASE (SMOOTH)
   const decrease = async (item: any) => {
+    setCart((prev: any) => ({
+      ...prev,
+      items: prev.items
+        .map((i: any) =>
+          i.productId === item.productId
+            ? { ...i, quantity: i.quantity - 1 }
+            : i,
+        )
+        .filter((i: any) => i.quantity > 0),
+    }));
+
     await fetch("/api/cart/decrease", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ productId: item.productId }),
     });
-    fetchCart();
   };
 
-  // REMOVE
+  // REMOVE (SMOOTH)
   const remove = async (id: string) => {
+    setCart((prev: any) => ({
+      ...prev,
+      items: prev.items.filter((i: any) => i.productId !== id),
+    }));
+
     await fetch("/api/cart", {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ productId: id }),
     });
-    fetchCart();
+  };
+
+  // CHECKOUT
+  const handleCheckout = async () => {
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+      });
+
+      if (res.ok) {
+        alert("Order placed successfully!");
+        setCart({ items: [] }); // instant clear
+      } else {
+        const data = await res.json();
+        alert(data.message || "Checkout failed");
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const total =
@@ -56,19 +120,26 @@ export default function CartPage() {
         {/* TITLE */}
         <div className="text-center">
           <div className="h-px w-14 mx-auto bg-gradient-to-r from-transparent via-[#c9a8ad]/50 to-transparent" />
-          <h1 className="mt-10 font-[family-name:var(--font-luxury-serif)] text-3xl font-semibold italic text-[#6b5346] sm:text-4xl">
+          <h1 className="mt-10 text-3xl font-semibold italic text-[#6b5346] sm:text-4xl">
             Cart
           </h1>
         </div>
 
+        {/* LOADING */}
+        {loading && (
+          <p className="mt-10 text-center text-sm text-gray-500">
+            Loading cart...
+          </p>
+        )}
+
         {/* EMPTY */}
-        {cart?.items?.length === 0 && (
+        {!loading && cart.items.length === 0 && (
           <div className="mt-10 text-center">
             <p className="text-sm text-stone-500">Your cart is empty.</p>
 
             <Link
               href="/"
-              className="mt-8 inline-flex rounded-full border border-[#e5e2dc] bg-[#f5f2ed]/90 px-8 py-3 text-sm font-semibold text-[#5c4a45] transition hover:border-[#dccfd2] hover:bg-[#f0dfe4]/70"
+              className="mt-8 inline-flex rounded-full border border-[#e5e2dc] bg-[#f5f2ed]/90 px-8 py-3 text-sm font-semibold text-[#5c4a45]"
             >
               Back to home
             </Link>
@@ -77,10 +148,10 @@ export default function CartPage() {
 
         {/* ITEMS */}
         <div className="mt-10 space-y-6">
-          {cart?.items?.map((item: any) => (
+          {cart.items.map((item: any) => (
             <div
               key={item.productId}
-              className="flex items-center justify-between rounded-2xl border border-[#e5e2dc] bg-[#f5f2ed]/70 p-5"
+              className="grid grid-cols-[2fr_1fr_auto] items-center rounded-2xl border border-[#e5e2dc] bg-[#f5f2ed]/70 p-5"
             >
               {/* INFO */}
               <div>
@@ -97,7 +168,7 @@ export default function CartPage() {
                   -
                 </button>
 
-                <span className="text-sm">{item.quantity}</span>
+                <span>{item.quantity}</span>
 
                 <button
                   onClick={() => increase(item)}
@@ -110,22 +181,25 @@ export default function CartPage() {
               {/* REMOVE */}
               <button
                 onClick={() => remove(item.productId)}
-                className="text-sm text-red-400"
+                className="p-2 rounded-full hover:bg-red-100"
               >
-                Remove
+                <Trash2 size={18} className="text-red-400" />
               </button>
             </div>
           ))}
         </div>
 
         {/* TOTAL */}
-        {cart?.items?.length > 0 && (
+        {!loading && cart.items.length > 0 && (
           <div className="mt-10 rounded-2xl border border-[#e5e2dc] bg-[#f5f2ed]/70 p-6 text-center">
             <h2 className="text-lg font-semibold text-[#5c4a45]">
-              Total: {total}€
+              Total: {total.toFixed(2)}€
             </h2>
 
-            <button className="mt-4 w-full rounded-full bg-[#6b5346] py-3 text-white hover:bg-[#5c4a45] transition">
+            <button
+              onClick={handleCheckout}
+              className="mt-4 w-full rounded-full bg-[#6b5346] py-3 text-white"
+            >
               Checkout
             </button>
           </div>

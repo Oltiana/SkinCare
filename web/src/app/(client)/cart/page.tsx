@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
   const [cart, setCart] = useState<any>({ items: [] });
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-  // FETCH CART
   const fetchCart = async () => {
     try {
       setLoading(true);
@@ -27,9 +28,7 @@ export default function CartPage() {
     fetchCart();
   }, []);
 
-  // INCREASE (SMOOTH)
   const increase = async (item: any) => {
-    // update UI instantly
     setCart((prev: any) => ({
       ...prev,
       items: prev.items.map((i: any) =>
@@ -37,7 +36,6 @@ export default function CartPage() {
       ),
     }));
 
-    // call API
     await fetch("/api/cart", {
       method: "POST",
       headers: {
@@ -51,7 +49,6 @@ export default function CartPage() {
     });
   };
 
-  // DECREASE (SMOOTH)
   const decrease = async (item: any) => {
     setCart((prev: any) => ({
       ...prev,
@@ -73,7 +70,6 @@ export default function CartPage() {
     });
   };
 
-  // REMOVE (SMOOTH)
   const remove = async (id: string) => {
     setCart((prev: any) => ({
       ...prev,
@@ -89,7 +85,6 @@ export default function CartPage() {
     });
   };
 
-  // CHECKOUT
   const handleCheckout = async () => {
     try {
       const res = await fetch("/api/checkout", {
@@ -97,8 +92,8 @@ export default function CartPage() {
       });
 
       if (res.ok) {
-        alert("Order placed successfully!");
-        setCart({ items: [] }); // instant clear
+        setCart({ items: [] });
+        router.push("/orders");
       } else {
         const data = await res.json();
         alert(data.message || "Checkout failed");
@@ -117,9 +112,17 @@ export default function CartPage() {
   return (
     <div className="flex min-h-[calc(100svh-3.5rem)] flex-col bg-[#faf9f7] px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto w-full max-w-2xl">
-        {/* TITLE */}
-        <div className="text-center">
+        {/* HEADER */}
+        <div className="relative text-center">
+          <Link
+            href="/orders"
+            className="absolute right-0 top-0 text-sm text-[#5c4a45] hover:underline"
+          >
+            View your orders
+          </Link>
+
           <div className="h-px w-14 mx-auto bg-gradient-to-r from-transparent via-[#c9a8ad]/50 to-transparent" />
+
           <h1 className="mt-10 text-3xl font-semibold italic text-[#6b5346] sm:text-4xl">
             Cart
           </h1>
@@ -153,13 +156,11 @@ export default function CartPage() {
               key={item.productId}
               className="grid grid-cols-[2fr_1fr_auto] items-center rounded-2xl border border-[#e5e2dc] bg-[#f5f2ed]/70 p-5"
             >
-              {/* INFO */}
               <div>
                 <h2 className="font-semibold text-[#5c4a45]">{item.name}</h2>
                 <p className="text-sm text-stone-500">{item.price}€</p>
               </div>
 
-              {/* QUANTITY */}
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => decrease(item)}
@@ -178,7 +179,6 @@ export default function CartPage() {
                 </button>
               </div>
 
-              {/* REMOVE */}
               <button
                 onClick={() => remove(item.productId)}
                 className="p-2 rounded-full hover:bg-red-100"
@@ -198,7 +198,7 @@ export default function CartPage() {
 
             <button
               onClick={handleCheckout}
-              className="mt-4 w-full rounded-full bg-[#6b5346] py-3 text-white"
+              className="mt-4 w-full rounded-full bg-[#6b5346] py-3 text-white hover:bg-[#5c4a45] transition"
             >
               Checkout
             </button>

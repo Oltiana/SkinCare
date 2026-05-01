@@ -26,8 +26,14 @@ function StatCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-stone-500">{title}</p>
-          <p className="mt-2.5 text-3xl font-semibold tabular-nums tracking-tight text-stone-900">{value}</p>
-          {sub ? <p className="mt-1.5 text-xs font-semibold text-emerald-600">{sub}</p> : null}
+          <p className="mt-2.5 text-3xl font-semibold tabular-nums tracking-tight text-stone-900">
+            {value}
+          </p>
+          {sub ? (
+            <p className="mt-1.5 text-xs font-semibold text-emerald-600">
+              {sub}
+            </p>
+          ) : null}
         </div>
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#fce8ee] text-[#8f4a5c]">
           {icon}
@@ -51,7 +57,14 @@ function StatCard({
 
 function BottleIcon() {
   return (
-    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
+    <svg
+      className="h-6 w-6"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      aria-hidden
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -63,7 +76,14 @@ function BottleIcon() {
 
 function BagIcon() {
   return (
-    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
+    <svg
+      className="h-6 w-6"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      aria-hidden
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -75,7 +95,14 @@ function BagIcon() {
 
 function PersonIcon() {
   return (
-    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
+    <svg
+      className="h-6 w-6"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      aria-hidden
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -87,7 +114,14 @@ function PersonIcon() {
 
 function CurrencyIcon() {
   return (
-    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
+    <svg
+      className="h-6 w-6"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      aria-hidden
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -99,35 +133,93 @@ function CurrencyIcon() {
 
 export default async function DashboardHomePage() {
   let totalUsers = 0;
+  let totalOrders = 0;
+  let revenue = 0;
+  let recentOrders: any[] = [];
+
   try {
     await connectDb();
+
     totalUsers = await User.countDocuments();
+
+    // 🔥 IMPORTO MODELIN ORDER
+    const { Order } = await import("@/lib/server/models/Order");
+
+    const orders = await Order.find().sort({ createdAt: -1 }).lean();
+
+    totalOrders = orders.length;
+
+    // 💰 SALES THIS MONTH
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const thisMonthOrders = orders.filter(
+      (o: any) => new Date(o.createdAt) >= firstDay,
+    );
+
+    revenue = thisMonthOrders.reduce(
+      (sum: number, o: any) => sum + (o.total || 0),
+      0,
+    );
+
+    // 📦 RECENT ORDERS (top 5)
+    recentOrders = orders.slice(0, 5);
   } catch (error) {
-    console.error("Dashboard could not load user stats:", error);
+    console.error("Dashboard could not load stats:", error);
   }
 
   return (
     <div className="min-h-full bg-white px-6 py-8 sm:px-10 sm:py-10">
       <div className="mx-auto max-w-7xl">
-        <h1 className="text-[1.65rem] font-semibold tracking-tight text-stone-900 sm:text-3xl">Dashboard</h1>
+        <h1 className="text-[1.65rem] font-semibold tracking-tight text-stone-900 sm:text-3xl">
+          Dashboard
+        </h1>
 
-
+        {/* STATS */}
         <div className="mt-9 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard title="Total products" value={0} icon={<BottleIcon />} />
-          <StatCard title="Total orders" value={0} icon={<BagIcon />} />
-          <StatCard title="Users" value={totalUsers} icon={<PersonIcon />} href="/dashboard/customers" />
-          <StatCard title="Revenue" value="€0" icon={<CurrencyIcon />} />
+
+          {/* ✅ TOTAL ORDERS */}
+          <StatCard
+            title="Total orders"
+            value={totalOrders}
+            icon={<BagIcon />}
+          />
+
+          <StatCard
+            title="Users"
+            value={totalUsers}
+            icon={<PersonIcon />}
+            href="/dashboard/customers"
+          />
+
+          {/* ✅ REVENUE */}
+          <StatCard
+            title="Revenue"
+            value={`€${revenue}`}
+            icon={<CurrencyIcon />}
+          />
         </div>
 
         <div className="mt-8">
           <DashboardSalesChart />
         </div>
 
+        {/* RECENT ORDERS */}
         <section className={`mt-8 ${cardSurface}`}>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-stone-900">Recent orders</h2>
-            <span className="text-sm font-semibold text-[#9a7b56]">View all →</span>
+            <h2 className="text-lg font-semibold text-stone-900">
+              Recent orders
+            </h2>
+
+            <Link
+              href="/dashboard/orders"
+              className="text-sm font-semibold text-[#9a7b56]"
+            >
+              View all →
+            </Link>
           </div>
+
           <div className="mt-5 overflow-x-auto">
             <table className="w-full min-w-[520px] text-left text-sm">
               <thead>
@@ -139,12 +231,38 @@ export default async function DashboardHomePage() {
                   <th className="pb-3 font-medium">Order date</th>
                 </tr>
               </thead>
+
               <tbody className="text-stone-600">
-                <tr>
-                  <td colSpan={5} className="py-14 text-center text-sm text-stone-500">
-                    No orders to show yet — table layout matches the reference dashboard design.
-                  </td>
-                </tr>
+                {recentOrders.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="py-14 text-center text-sm text-stone-500"
+                    >
+                      No orders to show yet
+                    </td>
+                  </tr>
+                ) : (
+                  recentOrders.map((order: any) => (
+                    <tr key={order._id}>
+                      <td className="py-3 pr-3">
+                        #{order._id.toString().slice(-6)}
+                      </td>
+
+                      <td className="py-3 pr-3">
+                        {order.user?.name || order.user?.email || "Guest"}
+                      </td>
+
+                      <td className="py-3 pr-3">€{order.total}</td>
+
+                      <td className="py-3 pr-3">{order.status || "Pending"}</td>
+
+                      <td className="py-3">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

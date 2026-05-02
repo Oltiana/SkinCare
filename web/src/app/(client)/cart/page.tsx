@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 
@@ -25,9 +25,34 @@ function clearGuestCart() {
   localStorage.removeItem(GUEST_CART_KEY);
 }
 
+function formatCardNumber(value: string) {
+  return value
+    .replace(/\D/g, "")
+    .slice(0, 16)
+    .replace(/(.{4})/g, "$1 ")
+    .trim();
+}
+
+function formatExpiry(value: string) {
+  return value
+    .replace(/\D/g, "")
+    .slice(0, 4)
+    .replace(/^(\d{2})(\d)/, "$1/$2");
+}
+
 export default function CartPage() {
   const [cart, setCart] = useState<any>({ items: [] });
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    cardNumber: "",
+    expiry: "",
+    cvv: "",
+  });
+  const [errors, setErrors] = useState<any>({});
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useSession();
@@ -70,25 +95,9 @@ export default function CartPage() {
     }
   };
 
-  const handleCheckout = async () => {
-    try {
-      const res = await fetch("/api/checkout", { method: "POST" });
-      if (res.ok) {
-        setCart({ items: [] });
-        router.push("/orders");
-      } else {
-        const data = await res.json();
-        alert(data.message || "Checkout failed");
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   useEffect(() => {
     if (status === "loading") return;
 
-    // ✅ Nëse erdhi nga login me ?checkout=true, fetch pastaj checkout
     if (
       status === "authenticated" &&
       searchParams.get("checkout") === "true" &&
@@ -97,7 +106,7 @@ export default function CartPage() {
       checkoutDone.current = true;
       fetchCart().then((data) => {
         if (data?.items?.length > 0) {
-          handleCheckout();
+          setShowModal(true);
         } else {
           router.push("/orders");
         }
@@ -106,6 +115,38 @@ export default function CartPage() {
       fetchCart();
     }
   }, [status]);
+
+  const validate = () => {
+    const e: any = {};
+    if (!form.name.trim()) e.name = "Emri është i detyrueshëm";
+    if (form.cardNumber.replace(/\s/g, "").length !== 16)
+      e.cardNumber = "Numri i kartës duhet të jetë 16 shifra";
+    if (form.expiry.length !== 5) e.expiry = "Data duhet të jetë MM/YY";
+    if (form.cvv.length < 3) e.cvv = "CVV duhet të jetë 3-4 shifra";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleCheckout = async () => {
+    if (!validate()) return;
+
+    try {
+      setPaying(true);
+      const res = await fetch("/api/checkout", { method: "POST" });
+      if (res.ok) {
+        setCart({ items: [] });
+        setShowModal(false);
+        router.push("/orders");
+      } else {
+        const data = await res.json();
+        alert(data.message || "Checkout failed");
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setPaying(false);
+    }
+  };
 
   const increase = async (item: any) => {
     if (status === "authenticated") {
@@ -204,7 +245,7 @@ export default function CartPage() {
         {/* HEADER */}
         <div className="relative text-center">
           <Link
-            href="/orders" // ✅ jo /dashboard/orders
+            href="/orders"
             className="absolute right-0 top-0 text-sm text-[#5c4a45] hover:underline"
           >
             View your orders
@@ -277,7 +318,7 @@ export default function CartPage() {
 
             {status === "authenticated" ? (
               <button
-                onClick={handleCheckout}
+                onClick={() => setShowModal(true)}
                 className="mt-4 w-full rounded-full bg-[#6b5346] py-3 text-white hover:bg-[#5c4a45] transition"
               >
                 Checkout
@@ -296,6 +337,128 @@ export default function CartPage() {
           </div>
         )}
       </div>
+
+      {/* MODAL PAGESA */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+          <div className="relative w-full max-w-md rounded-3xl bg-[#faf9f7] p-8 shadow-2xl">
+            {/* CLOSE */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute right-5 top-5 p-1 rounded-full hover:bg-[#e5e2dc] transition"
+            >
+              <X size={18} className="text-[#5c4a45]" />
+            </button>
+
+            <h2 className="text-2xl font-semibold italic text-[#6b5346] mb-6">
+              Payment Details
+            </h2>
+
+            <div className="space-y-4">
+              {/* EMRI */}
+              <div>
+                <label className="text-sm text-[#5c4a45] font-medium">
+                  Cardholder Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="John Doe"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-[#e5e2dc] bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#c9a8ad]"
+                />
+                {errors.name && (
+                  <p className="text-xs text-red-400 mt-1">{errors.name}</p>
+                )}
+              </div>
+
+              {/* NUMRI I KARTES */}
+              <div>
+                <label className="text-sm text-[#5c4a45] font-medium">
+                  Card Number
+                </label>
+                <input
+                  type="text"
+                  placeholder="1234 5678 9012 3456"
+                  value={form.cardNumber}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      cardNumber: formatCardNumber(e.target.value),
+                    })
+                  }
+                  className="mt-1 w-full rounded-xl border border-[#e5e2dc] bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#c9a8ad]"
+                />
+                {errors.cardNumber && (
+                  <p className="text-xs text-red-400 mt-1">
+                    {errors.cardNumber}
+                  </p>
+                )}
+              </div>
+
+              {/* EXPIRY + CVV */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-[#5c4a45] font-medium">
+                    Expiry Date
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="MM/YY"
+                    value={form.expiry}
+                    onChange={(e) =>
+                      setForm({ ...form, expiry: formatExpiry(e.target.value) })
+                    }
+                    className="mt-1 w-full rounded-xl border border-[#e5e2dc] bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#c9a8ad]"
+                  />
+                  {errors.expiry && (
+                    <p className="text-xs text-red-400 mt-1">{errors.expiry}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-sm text-[#5c4a45] font-medium">
+                    CVV
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="•••"
+                    maxLength={4}
+                    value={form.cvv}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        cvv: e.target.value.replace(/\D/g, ""),
+                      })
+                    }
+                    className="mt-1 w-full rounded-xl border border-[#e5e2dc] bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#c9a8ad]"
+                  />
+                  {errors.cvv && (
+                    <p className="text-xs text-red-400 mt-1">{errors.cvv}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* TOTAL */}
+              <div className="pt-2 border-t border-[#e5e2dc] flex justify-between items-center">
+                <span className="text-sm text-stone-500">Total</span>
+                <span className="font-semibold text-[#5c4a45]">
+                  {total.toFixed(2)}€
+                </span>
+              </div>
+
+              {/* BUTONI */}
+              <button
+                onClick={handleCheckout}
+                disabled={paying}
+                className="w-full rounded-full bg-[#6b5346] py-3 text-white hover:bg-[#5c4a45] transition disabled:opacity-60"
+              >
+                {paying ? "Duke procesuar..." : "Konfirmo Porosinë"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,7 +2,12 @@ import { auth } from "@/auth";
 import type { UserRole } from "@/lib/server/auth/roles";
 import { isDevDashboardOpen } from "@/lib/dev-dashboard";
 
-const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password"];
+const authRoutes = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+];
 
 function userRole(authUser: { role?: UserRole } | undefined): UserRole {
   return authUser?.role ?? "user";
@@ -29,14 +34,17 @@ export default auth((req) => {
   }
 
   /** Routes that require sign-in (any role). */
-  const userOnlyPrefixes = ["/profile", "/post-login"];
+  const userOnlyPrefixes = ["/profile", "/post-login", "/orders"];
   const needsUser = userOnlyPrefixes.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
   if (needsUser && !isAuthed) {
     const login = new URL("/login", req.url);
     const returnTo = `${req.nextUrl.pathname}${req.nextUrl.search}`;
-    login.searchParams.set("callbackUrl", returnTo.startsWith("/") ? returnTo : "/");
+    login.searchParams.set(
+      "callbackUrl",
+      returnTo.startsWith("/") ? returnTo : "/",
+    );
     return Response.redirect(login);
   }
 

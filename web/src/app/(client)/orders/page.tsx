@@ -2,10 +2,27 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { status } = useSession();
+
+  useEffect(() => {
+    // ✅ Nëse nuk është i loguar, dërgo në login
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+
+    // ✅ Prit derisa session të ngarkohet
+    if (status === "authenticated") {
+      fetchOrders();
+    }
+  }, [status]);
 
   const fetchOrders = async () => {
     try {
@@ -19,16 +36,20 @@ export default function OrdersPage() {
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  // ✅ Shfaq loading derisa session kontrollohet
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-[calc(100svh-3.5rem)] items-center justify-center bg-[#faf9f7]">
+        <p className="text-sm text-gray-500">Duke u ngarkuar...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[calc(100svh-3.5rem)] flex-col bg-[#faf9f7] px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto w-full max-w-2xl">
         {/* HEADER */}
         <div className="relative text-center">
-          {/* BACK BUTTON */}
           <Link
             href="/cart"
             className="absolute left-0 top-0 text-sm text-[#5c4a45] hover:underline"

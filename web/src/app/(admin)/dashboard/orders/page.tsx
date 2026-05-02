@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { Trash2, ChevronDown } from "lucide-react";
 
 type Order = {
   _id: string;
@@ -11,25 +12,123 @@ type Order = {
   user?: { name?: string; email?: string };
 };
 
+const STATUSES = [
+  { label: "Pending", bg: "bg-yellow-100", text: "text-yellow-800" },
+  { label: "Processing", bg: "bg-blue-100", text: "text-blue-700" },
+  { label: "Completed", bg: "bg-green-100", text: "text-green-700" },
+  { label: "Cancelled", bg: "bg-red-100", text: "text-red-700" },
+];
+
+function statusStyle(status?: string) {
+  return STATUSES.find((s) => s.label === status) ?? STATUSES[0];
+}
+
+function StatusDropdown({
+  orderId,
+  current,
+  onChange,
+}: {
+  orderId: string;
+  current?: string;
+  onChange: (id: string, status: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const style = statusStyle(current);
+
+  // ✅ Mbyll dropdown kur klikohet jashtë
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      {/* BUTONI */}
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium cursor-pointer ${style.bg} ${style.text}`}
+      >
+        {current || "Pending"}
+        <ChevronDown size={12} />
+      </button>
+
+      {/* DROPDOWN */}
+      {open && (
+        <div className="absolute right-0 mt-1 z-50 rounded-xl shadow-lg border border-gray-100 bg-white overflow-hidden w-36">
+          {STATUSES.map((s) => (
+            <button
+              key={s.label}
+              onClick={() => {
+                onChange(orderId, s.label);
+                setOpen(false);
+              }}
+              className={`w-full text-left text-xs px-3 py-2 font-medium hover:opacity-80 transition ${s.bg} ${s.text}`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await fetch("/api/orders");
-        const data = await res.json();
-        setOrders(data.orders || data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
   }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch("/api/orders");
+      const data = await res.json();
+      setOrders(data.orders || data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      if (res.ok) {
+        setOrders((prev) =>
+          prev.map((o) => (o._id === id ? { ...o, status } : o)),
+        );
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const deleteOrder = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this order?")) return;
+
+    try {
+      const res = await fetch(`/api/orders/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setOrders((prev) => prev.filter((o) => o._id !== id));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -63,15 +162,22 @@ export default function DashboardOrders() {
                 </p>
               </div>
 
-              <span
-                className={`text-xs px-2 py-1 rounded ${
-                  order.status === "Completed"
-                    ? "bg-green-500/20 text-green-750"
-                    : "bg-yellow-500/20 text-yellow-800"
-                }`}
-              >
-                {order.status || "Pending"}
-              </span>
+              <div className="flex items-center gap-3">
+                {/* ✅ CUSTOM DROPDOWN */}
+                <StatusDropdown
+                  orderId={order._id}
+                  current={order.status}
+                  onChange={updateStatus}
+                />
+
+                {/* DELETE */}
+                <button
+                  onClick={() => deleteOrder(order._id)}
+                  className="p-1.5 rounded-full hover:bg-red-100 transition"
+                >
+                  <Trash2 size={16} className="text-red-400" />
+                </button>
+              </div>
             </div>
 
             {/* CUSTOMER */}

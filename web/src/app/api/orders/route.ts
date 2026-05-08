@@ -5,27 +5,55 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 export async function GET() {
-  await connectDB();
-  const session = await auth();
+  try {
+    await connectDB();
+    const session = await auth();
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    let orders: any[] = [];
+
+    if (session.user.role === "admin") {
+      orders = await Order.find()
+        .sort({ orderNumber: -1, createdAt: -1 })
+        .lean();
+    } else {
+      orders = await Order.find({ userId: session.user.id })
+        .sort({ orderNumber: -1, createdAt: -1 })
+        .lean();
+    }
+
+    // Populate user info në mënyrë të sigurt
+    for (const order of orders) {
+      try {
+        if (order.userId) {
+          const user = await User.findById(order.userId)
+            .select("name email")
+            .lean();
+
+          order.user = user
+            ? {
+                name: user.name,
+                email: user.email,
+              }
+            : null;
+        }
+      } catch (e) {
+        order.user = null;
+      }
+    }
+
+    return NextResponse.json({ orders });
+  } catch (error: any) {
+    console.error("❌ API Orders Error:", error);
+    return NextResponse.json(
+      {
+        message: "Internal Server Error",
+        orders: [],
+      },
+      { status: 500 },
+    );
   }
-
-  const orders =
-    session.user.role === "admin"
-      ? await Order.find().sort({ createdAt: -1 })
-      : await Order.find({ userId: session.user.id }).sort({ createdAt: -1 });
-
-  const ordersWithUser = await Promise.all(
-    orders.map(async (order: any) => {
-      const user = await User.findById(order.userId).select("name email");
-      return {
-        ...order.toObject(),
-        user: user ? { name: user.name, email: user.email } : null,
-      };
-    }),
-  );
-
-  return NextResponse.json(ordersWithUser);
 }

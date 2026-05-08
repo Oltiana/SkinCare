@@ -12,13 +12,11 @@ export default function OrdersPage() {
   const { status } = useSession();
 
   useEffect(() => {
-    // ✅ Nëse nuk është i loguar, dërgo në login
     if (status === "unauthenticated") {
       router.push("/login");
       return;
     }
 
-    // ✅ Prit derisa session të ngarkohet
     if (status === "authenticated") {
       fetchOrders();
     }
@@ -27,16 +25,18 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       const res = await fetch("/api/orders");
+      if (!res.ok) throw new Error("Failed to fetch");
+
       const data = await res.json();
-      setOrders(data);
+      setOrders(data.orders || []);
     } catch (err) {
       console.error(err);
+      setOrders([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Shfaq loading derisa session kontrollohet
   if (status === "loading") {
     return (
       <div className="flex min-h-[calc(100svh-3.5rem)] items-center justify-center bg-[#faf9f7]">
@@ -48,7 +48,6 @@ export default function OrdersPage() {
   return (
     <div className="flex min-h-[calc(100svh-3.5rem)] flex-col bg-[#faf9f7] px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto w-full max-w-2xl">
-        {/* HEADER */}
         <div className="relative text-center">
           <Link
             href="/cart"
@@ -64,18 +63,15 @@ export default function OrdersPage() {
           </h1>
         </div>
 
-        {/* LOADING */}
         {loading && (
           <p className="mt-10 text-center text-sm text-gray-500">
             Loading orders...
           </p>
         )}
 
-        {/* EMPTY */}
         {!loading && orders.length === 0 && (
           <div className="mt-10 text-center">
             <p className="text-sm text-stone-500">You have no orders yet.</p>
-
             <Link
               href="/"
               className="mt-6 inline-flex rounded-full border border-[#e5e2dc] bg-[#f5f2ed]/90 px-6 py-2 text-sm text-[#5c4a45]"
@@ -85,47 +81,54 @@ export default function OrdersPage() {
           </div>
         )}
 
-        {/* ORDERS LIST */}
         <div className="mt-10 space-y-6">
-          {orders.map((order, index) => (
-            <div
-              key={index}
-              className="rounded-2xl border border-[#e5e2dc] bg-[#f5f2ed]/70 p-5"
-            >
-              {/* ORDER INFO */}
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="font-semibold text-[#5c4a45]">
-                  Order #{index + 1}
-                </h2>
+          {orders.map(
+            (
+              order,
+              index, // ← Shto , index këtu
+            ) => (
+              <div
+                key={order._id || index}
+                className="rounded-2xl border border-[#e5e2dc] bg-[#f5f2ed]/70 p-5"
+              >
+                {/* ORDER INFO */}
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="font-semibold text-[#5c4a45]">
+                    Order #
+                    {(order as any).orderNumber
+                      ? String((order as any).orderNumber).padStart(3, "0")
+                      : index + 1}
+                  </h2>
 
-                <span className="text-sm text-green-600">
-                  {order.status || "Completed"}
-                </span>
-              </div>
+                  <span className="text-sm text-green-600">
+                    {order.status || "Completed"}
+                  </span>
+                </div>
 
-              {/* ITEMS */}
-              <div className="space-y-2">
-                {order.items.map((item: any) => (
-                  <div
-                    key={item.productId}
-                    className="flex justify-between text-sm text-stone-600"
-                  >
-                    <span>
-                      {item.name} x {item.quantity}
-                    </span>
-                    <span>{item.price * item.quantity}€</span>
-                  </div>
-                ))}
-              </div>
+                {/* ITEMS */}
+                <div className="space-y-2">
+                  {order.items?.map((item: any, i: number) => (
+                    <div
+                      key={item.productId || i}
+                      className="flex justify-between text-sm text-stone-600"
+                    >
+                      <span>
+                        {item.name} x {item.quantity}
+                      </span>
+                      <span>{item.price * item.quantity}€</span>
+                    </div>
+                  ))}
+                </div>
 
-              {/* TOTAL */}
-              <div className="mt-4 pt-3 border-t border-[#e5e2dc] text-right">
-                <span className="font-semibold text-[#5c4a45]">
-                  Total: {order.total}€
-                </span>
+                {/* TOTAL */}
+                <div className="mt-4 pt-3 border-t border-[#e5e2dc] text-right">
+                  <span className="font-semibold text-[#5c4a45]">
+                    Total: {order.total}€
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ),
+          )}
         </div>
       </div>
     </div>

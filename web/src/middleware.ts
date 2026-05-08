@@ -48,16 +48,24 @@ export default auth((req) => {
     return Response.redirect(login);
   }
 
+  /** BLOKO ADMININ NGA CART DHE CHECKOUT */
+  const isClientCartOrCheckout =
+    pathname.startsWith("/cart") || pathname.startsWith("/checkout");
+
+  if (isClientCartOrCheckout && role === "admin") {
+    // ✅ Ndrysho rrugën sipas strukturës tënde të folderit
+    return Response.redirect(new URL("/dashboard/orders", req.url));
+  }
+
   /** Admin only */
   const isAdminPath =
     pathname === "/admin" ||
     pathname.startsWith("/admin/") ||
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/");
+
   if (isAdminPath) {
-    if (isDevDashboardOpen()) {
-      return undefined;
-    }
+    if (isDevDashboardOpen()) return undefined;
     if (!isAuthed) {
       const login = new URL("/login", req.url);
       login.searchParams.set("callbackUrl", pathname);

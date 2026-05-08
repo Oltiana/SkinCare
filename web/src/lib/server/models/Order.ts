@@ -2,25 +2,41 @@ import mongoose, { Schema, model, models } from "mongoose";
 
 const OrderLineSchema = new Schema(
   {
+    productId: { type: String, required: true },
     name: { type: String, required: true, trim: true },
     quantity: { type: Number, required: true, min: 1 },
-    priceCents: { type: Number, min: 0 },
+    price: { type: Number, required: true, min: 0 },
   },
   { _id: false },
 );
 
 const OrderSchema = new Schema(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    orderNumber: {
+      type: Number,
+      unique: true,
+      index: true,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
     items: {
       type: [OrderLineSchema],
       required: true,
-      validate: {
-        validator: (v: unknown[]) => Array.isArray(v) && v.length > 0,
-        message: "Order needs at least one line.",
-      },
     },
-    totalCents: { type: Number, min: 0 },
+    total: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "Processing", "Completed", "Cancelled"],
+      default: "Pending",
+    },
   },
   { timestamps: true },
 );

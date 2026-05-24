@@ -10,7 +10,7 @@ const UserSchema = new Schema(
       lowercase: true,
       trim: true,
     },
-    /** Optional for OAuth. Stripped from JSON via `toJSON` (do not expose in API). */
+    /** Stripped from JSON via `toJSON` (do not expose in API). */
     password: { type: String },
     name: { type: String, trim: true, default: "" },
     role: {

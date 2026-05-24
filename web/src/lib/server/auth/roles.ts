@@ -18,7 +18,7 @@ export function isAdminEmail(email: string): boolean {
   return parseAdminEmails().has(e);
 }
 
-/** Used when a new user is created (register or OAuth). */
+/** Used when a new user is created (register). */
 export function roleForNewUser(email: string): UserRole {
   return isAdminEmail(email) ? "admin" : "user";
 }

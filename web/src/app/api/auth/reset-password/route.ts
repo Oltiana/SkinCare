@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import { hash } from "bcryptjs";
-import { connectDb } from "@/lib/server/db";
-import { User } from "@/lib/server/models/User";
-import { hashResetToken } from "@/lib/server/token";
-import { resetSchema } from "@/lib/validations/auth";
+import { resetUserPasswordWithCode } from "@/lib/server/auth/reset-password";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -13,43 +9,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const parsed = resetSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Validation failed", fields: parsed.error.flatten().fieldErrors },
-      { status: 400 },
-    );
-  }
-
-  const tokenHash = hashResetToken(parsed.data.token);
-
-  try {
-    await connectDb();
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "Database error";
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
-
-  const user = await User.findOne({
-    resetTokenHash: tokenHash,
-    resetTokenExpires: { $gt: new Date() },
+  const b = body as Record<string, unknown>;
+  const result = await resetUserPasswordWithCode({
+    email: typeof b.email === "string" ? b.email : "",
+    code: typeof b.code === "string" ? b.code : "",
+    password: typeof b.password === "string" ? b.password : "",
   });
 
-  if (!user) {
-    return NextResponse.json(
-      { error: "This link is invalid or has expired. Request a new one." },
-      { status: 400 },
-    );
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
   }
-
-  const passwordHash = await hash(parsed.data.password, 12);
-  await User.updateOne(
-    { _id: user._id },
-    {
-      $set: { password: passwordHash },
-      $unset: { resetTokenHash: 1, resetTokenExpires: 1 },
-    },
-  );
 
   return NextResponse.json({ ok: true });
 }

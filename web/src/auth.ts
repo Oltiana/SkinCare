@@ -1,11 +1,8 @@
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import Facebook from "next-auth/providers/facebook";
-import Google from "next-auth/providers/google";
 import { compare } from "bcryptjs";
 import type { UserRole } from "@/lib/server/auth/roles";
-import { isAdminEmail, roleForNewUser } from "@/lib/server/auth/roles";
-import { getFacebookOAuthCredentials, getGoogleOAuthCredentials } from "@/lib/server/oauth-env";
+import { isAdminEmail } from "@/lib/server/auth/roles";
 
 const providers: NextAuthConfig["providers"] = [
   Credentials({
@@ -51,79 +48,20 @@ const providers: NextAuthConfig["providers"] = [
   }),
 ];
 
-const googleCreds = getGoogleOAuthCredentials();
-if (googleCreds) {
-  providers.push(
-    Google({
-      clientId: googleCreds.id,
-      clientSecret: googleCreds.secret,
-      allowDangerousEmailAccountLinking: true,
-    }),
-  );
-}
-
-const facebookCreds = getFacebookOAuthCredentials();
-if (facebookCreds) {
-  providers.push(
-    Facebook({
-      clientId: facebookCreds.id,
-      clientSecret: facebookCreds.secret,
-      allowDangerousEmailAccountLinking: true,
-      client: { token_endpoint_auth_method: "client_secret_post" },
-    }),
-  );
-}
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   pages: { signIn: "/login" },
   providers,
   callbacks: {
-    async jwt({ token, user, account }) {
-      if (user && account) {
-        if (account.provider === "credentials") {
-          const u = user as { id?: string; email?: string | null; role?: UserRole };
-          token.sub = u.id;
-          token.id = u.id;
-          token.email = u.email ?? undefined;
-          token.role = u.role ?? "user";
-          return token;
-        }
-
-        const email = (user.email ?? "").toLowerCase().trim();
-        if (!email) {
-          return token;
-        }
-
-        const { connectDb } = await import("@/lib/server/db");
-        const { User } = await import("@/lib/server/models/User");
-        await connectDb();
-
-        let dbUser = await User.findOne({ email });
-        if (!dbUser) {
-          dbUser = await User.create({
-            email,
-            name: (user.name ?? "").slice(0, 200),
-            role: roleForNewUser(email),
-          });
-        } else {
-          const wanted: UserRole = roleForNewUser(email);
-          if (wanted === "admin" && dbUser.role !== "admin") {
-            dbUser.role = "admin";
-            await dbUser.save();
-          }
-        }
-
-        token.sub = dbUser._id.toString();
-        token.id = dbUser._id.toString();
-        token.email = dbUser.email;
-        token.role =
-          isAdminEmail(dbUser.email) || dbUser.role === "admin"
-            ? "admin"
-            : "user";
+    async jwt({ token, user }) {
+      if (user) {
+        const u = user as { id?: string; email?: string | null; role?: UserRole };
+        token.sub = u.id;
+        token.id = u.id;
+        token.email = u.email ?? undefined;
+        token.role = u.role ?? "user";
       }
-
       return token;
     },
     async session({ session, token }) {

@@ -1,8 +1,13 @@
-import { AuthUnifiedCard } from "@/components/client/auth-unified-card";
-import { getOauthProviderFlags } from "@/lib/server/oauth-flags";
+import { AuthUnifiedCard } from "@/components/auth/auth-unified-card";
+import type { AuthSearchParams } from "@/components/auth/types";
 
-export default function LoginPage() {
-  const oauth = getOauthProviderFlags();
+export const dynamic = "force-dynamic";
 
-  return <AuthUnifiedCard oauth={oauth} />;
+type PageProps = {
+  searchParams: Promise<AuthSearchParams>;
+};
+
+export default async function LoginPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  return <AuthUnifiedCard searchParams={sp} />;
 }

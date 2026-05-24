@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import { hash } from "bcryptjs";
-import { roleForNewUser } from "@/lib/server/auth/roles";
-import { connectDb } from "@/lib/server/db";
-import { User } from "@/lib/server/models/User";
+import { registerUser } from "@/lib/server/auth/register-user";
 import { registerSchema } from "@/lib/validations/auth";
 
 export async function POST(req: Request) {
@@ -21,27 +18,11 @@ export async function POST(req: Request) {
     );
   }
 
-  const { email, password, name } = parsed.data;
-
-  try {
-    await connectDb();
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "Database error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+  const result = await registerUser(parsed.data);
+  if (!result.ok) {
+    const status = result.error.includes("already registered") ? 409 : 500;
+    return NextResponse.json({ error: result.error }, { status });
   }
-
-  const existing = await User.findOne({ email: email.toLowerCase() });
-  if (existing) {
-    return NextResponse.json({ error: "This email is already registered" }, { status: 409 });
-  }
-
-  const passwordHash = await hash(password, 12);
-  await User.create({
-    email: email.toLowerCase(),
-    password: passwordHash,
-    name: name || "",
-    role: roleForNewUser(email.toLowerCase()),
-  });
 
   return NextResponse.json({ ok: true });
 }

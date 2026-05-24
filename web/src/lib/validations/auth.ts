@@ -35,7 +35,24 @@ export const forgotSchema = z.object({
   email: z.string().trim().email("Invalid email"),
 });
 
+const resetCodeField = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, "Enter the 6-digit code from your email");
+
+/** API / server — email + code + password. */
 export const resetSchema = z.object({
-  token: z.string().min(1, "Token is required"),
+  email: z.string().trim().email("Invalid email"),
+  code: resetCodeField,
   password: passwordPolicy,
 });
+
+/** Reset password form (with confirm). */
+export const resetWithCodeFormSchema = resetSchema
+  .extend({
+    confirmPassword: z.string().min(1, "Confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });

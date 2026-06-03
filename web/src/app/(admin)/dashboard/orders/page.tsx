@@ -195,12 +195,10 @@ export default function DashboardOrders() {
                 </div>
               </div>
 
-              {/* CUSTOMER */}
               <div className="text-sm text-gray-800">
                 {order.user?.name || order.user?.email || "Guest"}
               </div>
 
-              {/* ITEMS */}
               <div className="space-y-1 text-sm">
                 {order.items?.map((item: any, index: number) => (
                   <div
@@ -215,7 +213,6 @@ export default function DashboardOrders() {
                 ))}
               </div>
 
-              {/* TOTAL */}
               <div className="pt-3 border-t border-white/10 text-right">
                 <span className="font-semibold text-green-500">
                   Total: €{order.total}
@@ -226,7 +223,6 @@ export default function DashboardOrders() {
         </div>
       </div>
 
-      {/* BACK TO STORE */}
       <div className="flex justify-center py-6">
         <Link href="/" className="text-sm text-[#5c4a45] hover:underline">
           ← Back to Store

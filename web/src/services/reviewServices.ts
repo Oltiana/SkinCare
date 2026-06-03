@@ -7,7 +7,7 @@ export async function addReview(data: any) {
   const res = await fetch("/api/reviews", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json", // 🔥 FIX
+      "Content-Type": "application/json", 
     },
     body: JSON.stringify(data),
   });

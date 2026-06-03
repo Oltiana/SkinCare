@@ -17,7 +17,6 @@ export async function POST(req: Request) {
 
   const uploadPath = path.join(process.cwd(), "public/uploads");
 
-  // krijo folder nëse nuk ekziston
   if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath, { recursive: true });
   }
@@ -27,6 +26,6 @@ export async function POST(req: Request) {
   fs.writeFileSync(filePath, buffer);
 
   return NextResponse.json({
-    url: `/uploads/${fileName}`, // KJO është shumë e rëndësishme
+    url: `/uploads/${fileName}`, 
   });
 }

@@ -3,7 +3,6 @@ import Review from "@/models/Review";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
-// ❌ DELETE REVIEW
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }

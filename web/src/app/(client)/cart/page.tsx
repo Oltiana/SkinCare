@@ -242,7 +242,7 @@ export default function CartPage() {
   return (
     <div className="flex min-h-[calc(100svh-3.5rem)] flex-col bg-[#faf9f7] px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto w-full max-w-2xl">
-        {/* HEADER */}
+        
         <div className="relative text-center">
           <Link
             href="/orders"
@@ -258,7 +258,6 @@ export default function CartPage() {
           </h1>
         </div>
 
-        {/* EMPTY */}
         {cart.items.length === 0 && (
           <div className="mt-10 text-center">
             <p className="text-sm text-stone-500">Your cart is empty.</p>
@@ -271,7 +270,6 @@ export default function CartPage() {
           </div>
         )}
 
-        {/* ITEMS */}
         <div className="mt-10 space-y-6">
           {cart.items.map((item: any) => (
             <div
@@ -309,7 +307,6 @@ export default function CartPage() {
           ))}
         </div>
 
-        {/* TOTAL */}
         {cart.items.length > 0 && (
           <div className="mt-10 rounded-2xl border border-[#e5e2dc] bg-[#f5f2ed]/70 p-6 text-center">
             <h2 className="text-lg font-semibold text-[#5c4a45]">
@@ -338,11 +335,10 @@ export default function CartPage() {
         )}
       </div>
 
-      {/* MODAL PAGESA */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
           <div className="relative w-full max-w-md rounded-3xl bg-[#faf9f7] p-8 shadow-2xl">
-            {/* CLOSE */}
+         
             <button
               onClick={() => setShowModal(false)}
               className="absolute right-5 top-5 p-1 rounded-full hover:bg-[#e5e2dc] transition"
@@ -355,7 +351,7 @@ export default function CartPage() {
             </h2>
 
             <div className="space-y-4">
-              {/* EMRI */}
+             
               <div>
                 <label className="text-sm text-[#5c4a45] font-medium">
                   Cardholder Name
@@ -372,7 +368,6 @@ export default function CartPage() {
                 )}
               </div>
 
-              {/* NUMRI I KARTES */}
               <div>
                 <label className="text-sm text-[#5c4a45] font-medium">
                   Card Number
@@ -396,7 +391,6 @@ export default function CartPage() {
                 )}
               </div>
 
-              {/* EXPIRY + CVV */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-[#5c4a45] font-medium">
@@ -439,7 +433,6 @@ export default function CartPage() {
                 </div>
               </div>
 
-              {/* TOTAL */}
               <div className="pt-2 border-t border-[#e5e2dc] flex justify-between items-center">
                 <span className="text-sm text-stone-500">Total</span>
                 <span className="font-semibold text-[#5c4a45]">
@@ -447,7 +440,6 @@ export default function CartPage() {
                 </span>
               </div>
 
-              {/* BUTONI */}
               <button
                 onClick={handleCheckout}
                 disabled={paying}

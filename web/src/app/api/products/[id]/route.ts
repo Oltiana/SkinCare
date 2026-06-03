@@ -3,7 +3,6 @@ import Product from "@/models/Product";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
-// GET ONE
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -25,7 +24,6 @@ export async function GET(
   return NextResponse.json(product);
 }
 
-// ✏️ UPDATE
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -42,7 +40,7 @@ export async function PUT(
   return NextResponse.json(updated);
 }
 
-// ❌ DELETE
+
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }

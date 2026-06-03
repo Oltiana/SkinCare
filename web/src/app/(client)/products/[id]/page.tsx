@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import AddToCartButton from "@/components/client/AddToCartButton";
 import AddReview from "@/components/client/AddReview";
 import ReviewList from "@/components/client/ReviewList";
@@ -14,36 +10,49 @@ type Product = {
   image: string;
 };
 
-export default function ProductDetail() {
-  const params = useParams();
-  const id = params?.id ? String(params.id) : "";
+async function getProduct(id: string) {
+  const res = await fetch(
+    `http://localhost:3000/api/products/${id}`,
+    {
+      cache: "no-store",
+    }
+  );
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [reviews, setReviews] = useState<any[]>([]);
+  return res.json();
+}
 
-  useEffect(() => {
-    if (!id) return;
+async function getReviews(id: string) {
+  const res = await fetch(
+    `http://localhost:3000/api/reviews?productId=${id}`,
+    {
+      cache: "no-store",
+    }
+  );
 
-    fetch(`/api/products/${id}`)
-      .then((res) => res.json())
-      .then(setProduct);
+  return res.json();
+}
 
-    fetch(`/api/reviews?productId=${id}`)
-      .then((res) => res.json())
-      .then(setReviews);
-  }, [id]);
+export default async function ProductDetail({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
-  if (!id) return <p className="p-10">Loading...</p>;
-  if (product === null) return <p className="p-10">Loading...</p>;
-  if (!product || (product as any).error)
-    return <p className="p-10 text-red-500">Produkti nuk u gjet</p>;
+  const product = await getProduct(id);
+  const reviews = await getReviews(id);
+
+  if (!product || product.error) {
+    return (
+      <p className="p-10 text-red-500">
+        Produkti nuk u gjet
+      </p>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F9F9F9]">
-      
-      {/* CONTAINER */}
       <div className="max-w-6xl mx-auto flex items-start gap-32 p-10">
-
         {/* LEFT SIDE - BIG IMAGE */}
         <div className="bg-white rounded-2xl shadow-md p-6 w-[350px] h-[450px] flex items-center justify-center flex-shrink-0 overflow-hidden">
           <img
@@ -85,7 +94,6 @@ export default function ProductDetail() {
             <ReviewList reviews={reviews} />
           </div>
         </div>
-
       </div>
     </div>
   );

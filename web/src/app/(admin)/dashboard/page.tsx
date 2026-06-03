@@ -142,14 +142,12 @@ export default async function DashboardHomePage() {
 
     totalUsers = await User.countDocuments();
 
-    // 🔥 IMPORTO MODELIN ORDER
     const { Order } = await import("@/lib/server/models/Order");
 
     const orders = await Order.find().sort({ createdAt: -1 }).lean();
 
     totalOrders = orders.length;
 
-    // 💰 SALES THIS MONTH
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -162,7 +160,6 @@ export default async function DashboardHomePage() {
       0,
     );
 
-    // 📦 RECENT ORDERS (top 5)
     recentOrders = orders.slice(0, 5);
   } catch (error) {
     console.error("Dashboard could not load stats:", error);
@@ -175,11 +172,9 @@ export default async function DashboardHomePage() {
           Dashboard
         </h1>
 
-        {/* STATS */}
         <div className="mt-9 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard title="Total products" value={0} icon={<BottleIcon />} />
 
-          {/* ✅ TOTAL ORDERS */}
           <StatCard
             title="Total orders"
             value={totalOrders}
@@ -193,7 +188,6 @@ export default async function DashboardHomePage() {
             href="/dashboard/customers"
           />
 
-          {/* ✅ REVENUE */}
           <StatCard
             title="Revenue"
             value={`€${revenue}`}
@@ -205,7 +199,6 @@ export default async function DashboardHomePage() {
           <DashboardSalesChart />
         </div>
 
-        {/* RECENT ORDERS */}
         <section className={`mt-8 ${cardSurface}`}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-stone-900">

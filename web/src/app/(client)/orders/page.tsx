@@ -85,13 +85,12 @@ export default function OrdersPage() {
           {orders.map(
             (
               order,
-              index, // ← Shto , index këtu
+              index, 
             ) => (
               <div
                 key={order._id || index}
                 className="rounded-2xl border border-[#e5e2dc] bg-[#f5f2ed]/70 p-5"
               >
-                {/* ORDER INFO */}
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="font-semibold text-[#5c4a45]">
                     Order #
@@ -105,7 +104,6 @@ export default function OrdersPage() {
                   </span>
                 </div>
 
-                {/* ITEMS */}
                 <div className="space-y-2">
                   {order.items?.map((item: any, i: number) => (
                     <div
@@ -120,7 +118,6 @@ export default function OrdersPage() {
                   ))}
                 </div>
 
-                {/* TOTAL */}
                 <div className="mt-4 pt-3 border-t border-[#e5e2dc] text-right">
                   <span className="font-semibold text-[#5c4a45]">
                     Total: {order.total}€

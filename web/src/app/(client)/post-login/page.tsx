@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 
-/** After login — redirect by role (admin → /dashboard, user → home). */
 export default async function PostLoginPage() {
   const session = await auth();
   if (!session?.user) {

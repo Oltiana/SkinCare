@@ -4,7 +4,7 @@ import Product from "@/models/Product";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
-// ✅ GET REVIEWS
+
 export async function GET(req: Request) {
   await connectDB();
 
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   return NextResponse.json(reviews);
 }
 
-// ✅ POST REVIEW
+
 export async function POST(req: Request) {
   try {
     await connectDB();

@@ -12,7 +12,6 @@ export default function AddToCartButton({ product }: any) {
   const addToCart = async () => {
     try {
       if (status === "authenticated") {
-        // ✅ I loguar — ruaj në databazë
         await fetch("/api/cart", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -23,7 +22,6 @@ export default function AddToCartButton({ product }: any) {
           }),
         });
       } else {
-        // ✅ Guest — ruaj në localStorage
         const existing = JSON.parse(
           localStorage.getItem(GUEST_CART_KEY) || "[]",
         );

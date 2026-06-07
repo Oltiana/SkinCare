@@ -21,7 +21,7 @@ export default async function Home({ searchParams }: HomeProps) {
       )}
 
       {/* HERO */}
-      <section className="flex flex-col md:flex-row items-center gap-10 rounded-2xl border border-white/10 bg-white/70 shadow-sm p-10">
+      <section className="animate-fade-in-up flex flex-col md:flex-row items-center gap-10 rounded-2xl border border-white/10 bg-white/70 shadow-sm p-10">
         <div className="max-w-xl space-y-5">
           <span className="inline-flex items-center gap-2 text-sm text-gray-500">
             <Sparkles size={16} /> Premium Skincare Collection
@@ -43,7 +43,7 @@ export default async function Home({ searchParams }: HomeProps) {
           </Link>
         </div>
 
-        <div className="relative">
+        <div className="animate-gentle-float relative">
           <img
             src="https://www.shutterstock.com/shutterstock/videos/3694129327/thumb/1.jpg?ip=x480"
             alt="Skincare"
@@ -92,7 +92,7 @@ export default async function Home({ searchParams }: HomeProps) {
       </section>
 
       {/* BEST SELLERS (SLIDER) */}
-      <section className="rounded-2xl border border-white/10 bg-white/70 shadow-sm p-10 space-y-6">
+      <section className="animate-fade-in-up rounded-2xl border border-white/10 bg-white/70 shadow-sm p-10 space-y-6">
         <div className="text-center space-y-2">
           <h2 className="text-3xl font-semibold text-gray-800">Best Sellers</h2>
           <p className="text-gray-500">Our most loved skincare products</p>
@@ -176,7 +176,7 @@ export default async function Home({ searchParams }: HomeProps) {
       </section>
 
       {/* ABOUT */}
-      <section className="rounded-2xl border border-white/10 bg-white/70 shadow-sm p-10 text-center space-y-5">
+      <section className="animate-fade-in-up rounded-2xl border border-white/10 bg-white/70 shadow-sm p-10 text-center space-y-5">
         <h2 className="text-3xl font-semibold text-gray-800">About Us</h2>
 
         <p className="text-gray-500 max-w-2xl mx-auto">

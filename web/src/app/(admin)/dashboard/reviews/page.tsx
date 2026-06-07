@@ -1,14 +1,21 @@
 import ReviewsClient from "./ReviewsClient";
+import { connectDB } from "@/lib/mongodb";
+import Review from "@/models/Review";
 
 async function getReviews() {
-  const res = await fetch(
-    "http://localhost:3000/api/reviews",
-    {
-      cache: "no-store",
-    }
-  );
+  try {
+    await connectDB();
 
-  return res.json();
+    const reviews = await Review.find({})
+      .populate("productId")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return JSON.parse(JSON.stringify(reviews));
+  } catch (error) {
+    console.error("Failed to load reviews for admin dashboard:", error);
+    return [];
+  }
 }
 
 export default async function ReviewsPage() {

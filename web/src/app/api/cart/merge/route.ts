@@ -1,4 +1,4 @@
-/* import { connectDB } from "@/lib/db";
+import { connectDB } from "@/lib/db";
 import Cart from "@/models/Cart";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
@@ -20,9 +20,7 @@ export async function POST(req: Request) {
   }
 
   for (const guestItem of items) {
-    const exist = cart.items.find(
-      (i: any) => i.productId === guestItem.productId,
-    );
+    const exist = cart.items.find((i: any) => i.productId === guestItem.productId);
     if (exist) {
       exist.quantity += guestItem.quantity;
     } else {
@@ -33,4 +31,3 @@ export async function POST(req: Request) {
   await cart.save();
   return NextResponse.json(cart);
 }
-*/

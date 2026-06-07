@@ -28,6 +28,12 @@ export default function Footer() {
             <Link href="/about" className="hover:text-[#8f5f6a]">
               About
             </Link>
+            <Link href="/contact" className="hover:text-[#8f5f6a]">
+              Contact
+            </Link>
+            <Link href="/faq" className="hover:text-[#8f5f6a]">
+              FAQ
+            </Link>
           </div>
 
           {/* Contact */}

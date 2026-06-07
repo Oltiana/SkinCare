@@ -1,6 +1,9 @@
 import AddToCartButton from "@/components/client/AddToCartButton";
 import AddReview from "@/components/client/AddReview";
 import ReviewList from "@/components/client/ReviewList";
+import { connectDB } from "@/lib/mongodb";
+import Product from "@/models/Product";
+import Review from "@/models/Review";
 
 type Product = {
   _id: string;
@@ -11,25 +14,29 @@ type Product = {
 };
 
 async function getProduct(id: string) {
-  const res = await fetch(
-    `http://localhost:3000/api/products/${id}`,
-    {
-      cache: "no-store",
-    }
-  );
-
-  return res.json();
+  try {
+    await connectDB();
+    const product = await Product.findById(id).lean();
+    return product ? JSON.parse(JSON.stringify(product)) : null;
+  } catch (error) {
+    console.error("Failed to load product:", error);
+    return null;
+  }
 }
 
 async function getReviews(id: string) {
-  const res = await fetch(
-    `http://localhost:3000/api/reviews?productId=${id}`,
-    {
-      cache: "no-store",
-    }
-  );
+  try {
+    await connectDB();
+    const reviews = await Review.find({ productId: id })
+      .populate("productId")
+      .sort({ createdAt: -1 })
+      .lean();
 
-  return res.json();
+    return JSON.parse(JSON.stringify(reviews));
+  } catch (error) {
+    console.error("Failed to load reviews:", error);
+    return [];
+  }
 }
 
 export default async function ProductDetail({

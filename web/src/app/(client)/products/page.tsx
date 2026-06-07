@@ -1,20 +1,20 @@
 import ProductsClient from "./ProductsClient";
+import { connectDB } from "@/lib/mongodb";
+import Product from "@/models/Product";
 
 async function getProducts() {
-  const res = await fetch("http://localhost:3000/api/products", {
-    cache: "no-store",
-  });
+  try {
+    await connectDB();
 
-  if (!res.ok) {
+    const products = await Product.find({})
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return JSON.parse(JSON.stringify(products));
+  } catch (error) {
+    console.error("Failed to load products:", error);
     return [];
   }
-
-  const data = await res.json();
-
-  return data.map((p: any) => ({
-    ...p,
-    _id: p._id?.$oid || p._id,
-  }));
 }
 
 export default async function ProductsPage() {

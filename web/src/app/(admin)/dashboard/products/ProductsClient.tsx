@@ -16,6 +16,8 @@ export default function ProductsClient({
   initialProducts: Product[];
 }) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [form, setForm] = useState<Product>({
     name: "",
@@ -28,7 +30,12 @@ export default function ProductsClient({
 
   // GET
   const fetchProducts = async () => {
-    const res = await fetch("/api/products");
+    const res = await fetch("/api/products", { cache: "no-store" });
+
+    if (!res.ok) {
+      throw new Error("Unable to refresh products from the database.");
+    }
+
     const data = await res.json();
     setProducts(data);
   };
@@ -36,44 +43,74 @@ export default function ProductsClient({
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    const payload = {
-      ...form,
-      price: Number(form.price),
-    };
-
-    if (editingId) {
-      await fetch(`/api/products/${editingId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } else {
-      await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    if (!form.name.trim() || !form.description.trim()) {
+      setError("Please fill in the product name and description.");
+      return;
     }
 
-    setForm({
-      name: "",
-      price: "",
-      description: "",
-      image: "",
-    });
+    setLoading(true);
+    setError("");
 
-    setEditingId(null);
-    fetchProducts();
+    try {
+      const payload = {
+        ...form,
+        price: Number(form.price),
+      };
+
+      const res = editingId
+        ? await fetch(`/api/products/${editingId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+        : await fetch("/api/products", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Unable to save the product.");
+      }
+
+      setForm({
+        name: "",
+        price: "",
+        description: "",
+        image: "",
+      });
+
+      setEditingId(null);
+      await fetchProducts();
+    } catch (err: any) {
+      setError(err.message || "Something went wrong while saving the product.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id?: string) => {
     if (!id) return;
 
-    await fetch(`/api/products/${id}`, {
-      method: "DELETE",
-    });
+    setLoading(true);
+    setError("");
 
-    fetchProducts();
+    try {
+      const res = await fetch(`/api/products/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Unable to delete the product.");
+      }
+
+      await fetchProducts();
+    } catch (err: any) {
+      setError(err.message || "Something went wrong while deleting the product.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEdit = (p: Product) => {
@@ -95,6 +132,9 @@ export default function ProductsClient({
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded-2xl shadow-md space-y-4 max-w-xl"
       >
+        {error ? (
+          <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>
+        ) : null}
         <input
           placeholder="Product name"
           value={form.name}
@@ -138,8 +178,12 @@ export default function ProductsClient({
           className="w-full border p-3 rounded-lg"
         />
 
-        <button className="bg-green-500 text-white px-6 py-2 rounded-lg">
-          {editingId ? "Update Product" : "Add Product"}
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-green-500 text-white px-6 py-2 rounded-lg disabled:cursor-not-allowed disabled:bg-green-300"
+        >
+          {loading ? "Saving..." : editingId ? "Update Product" : "Add Product"}
         </button>
       </form>
 

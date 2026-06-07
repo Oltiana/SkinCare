@@ -99,6 +99,12 @@ export function SiteHeader({ appName }: { appName: string }) {
             <Link href="/about" className={navLink}>
               About
             </Link>
+            <Link href="/contact" className={navLink}>
+              Contact
+            </Link>
+            <Link href="/faq" className={navLink}>
+              FAQ
+            </Link>
           </nav>
 
           <div className="relative z-20 flex shrink-0 items-center gap-0.5 sm:gap-1">

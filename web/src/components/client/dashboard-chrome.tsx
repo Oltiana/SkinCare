@@ -127,9 +127,19 @@ export function DashboardChrome({ appName, userEmail, userInitials, children }: 
             Customers
           </Link>
 
+          <Link href="/dashboard/home" className={navLinkClass(pathname === "/dashboard/home")}>
+            <HomeIcon className="h-5 w-5 shrink-0 text-stone-500" />
+            Home Content
+          </Link>
+
           <Link href="/dashboard/about" className={navLinkClass(pathname === "/dashboard/about")}>
             <InfoIcon className="h-5 w-5 shrink-0 text-stone-500" />
             About Content
+          </Link>
+
+          <Link href="/dashboard/faq" className={navLinkClass(pathname === "/dashboard/faq")}>
+            <DocIcon className="h-5 w-5 shrink-0 text-stone-500" />
+            FAQ Content
           </Link>
 
           <Link href="/dashboard/reviews" className={navLinkClass(pathname === "/dashboard/reviews")} > 
